@@ -1,0 +1,126 @@
+---
+title: "Final 2"
+author: "dane_overholt"
+date: "12/12/2019"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align  = "center",
+                      fig.height = 3, 
+                      fig.width  = 5)
+```
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+# Question 1 (10 pts): Nicolas Winding Refn
+
+[Nicolas Winding Refn](https://en.wikipedia.org/wiki/Nicolas_Winding_Refn) is
+a Danish film director, most known for his 2011 neo-noir film
+[Drive](https://en.wikipedia.org/wiki/Drive_(2011_film)). The data frame in
+"refn.RData" contains the following variables
+
+- `film`: The name of the film.
+- `genre`: The genre of the film (a factor variable).
+- `rt`: The rotten tomatoes score of the film.
+- `date`: The release date (a Date variable).
+- `weekday`: The day of the week the film was released (a factor variable).
+
+1. (1 pt) Read these data into R using the `load()` function. I'll show you how 
+   to do this for a penalty of 1 pt if you are unable to.
+
+```{r}
+load("./refn.Rdata")
+head(refn)
+```     
+   
+
+2. (5 pts) The `crime` genre can actually be sub-categorized into `crime thriller` and
+   `crime drama`. Use forcats to add these levels to `genre` (which should be a
+   factor), then label `Fear X` and `Only God Forgives` to `crime thriller` and 
+   the rest of the `crime` films to `crime drama`. Finally, remove the `crime`
+   level from `genre`. Print out your new data frame. You don't need to, but you may use `replace()` once you have added the levels if you would like.
+   
+    It should look like what you see in the handout:
+   
+    ```{r, eval = TRUE}
+    levels(refn$genre)
+    
+    refn %>%
+      mutate(genre = fct_expand(genre, "crime thriller", "crime drama")) -> refn
+    
+    refn$genre <- c("crime drama",
+                    "crime drama",
+                    "crime thriller",
+                    "crime drama",
+                    "crime drama",
+                    "crime drama",
+                    "action",
+                    "action",
+                    "crime thriller",
+                    "horror")
+    
+    refn %>%
+      mutate(genre = fct_drop(genre, "crime")) -> refn
+    
+    head(refn, 10)
+    ```
+    
+    
+# Question 3 (10 pts): Scrabble Words
+
+Use only functions from the tidyverse. Do **not** try using `str_view()` or 
+`str_view_all()` on these data.
+
+1. (2 pts) The data frame in "subscrab.csv" contains a subset of the list of 
+   acceptable 2015 Scrabble words. Load this data frame into R. How may words are there in this dataframe?
+   
+    ```{r}
+    words <- read.csv("./subscrab.csv")
+    summary(words)
+    # 1000 words in the dataframe
+    ```
+   
+2. (4 pts) Find the number of double letters in each word. A double letter
+   is a string of length two that has the same letter in each position. So, for
+   example, "AALIIS" would have two double letters ("AA" and "II") but 
+   "ALAIIS" would only have one ("II").
+   
+    ```{r}
+  words %>%
+      mutate(repeats = str_count(word, "([A-Z])\\1")) -> words_repeat
+    ```
+   
+   
+3. (2 pts) Plot the distribution of the number of double letters. You will be
+   evaluated on the appropriateness of the plot and the aesthetics of the plot.
+
+    ```{r}
+words_repeat %>%
+      mutate(letters = str_length(word)) -> words_repeat2 
+    
+words_repeat2 %>%
+      ggplot(aes(x = letters, y = repeats, size = repeats)) +
+      geom_point() +
+      theme_bw() +
+      labs(x    = "length",
+           y    = "repeats") +
+      ggtitle("Length of a Word vs Amount of Double Letters")
+    ```
+   
+4. (2 pts) Of the words that have the most double letters, how many are the longest? How many doubles do they have and what is their length? (you should get more than one word here).
+
+    ```{r}
+    words_repeat2 %>%
+      group_by(repeats, letters) %>%
+      arrange(desc(repeats)) %>%
+      arrange(desc(letters)) %>%
+      filter(letters >= 15) -> longest
+    summary(longest)
+    
+    # 25 have 3 repeated letters and are length 15
+    ```
